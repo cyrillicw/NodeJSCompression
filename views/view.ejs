@@ -5,40 +5,199 @@
 <body>
 <section>
     <H1>Raw Image</H1>
-    <button>Request raw image</button>
+    <div>
+        <button onclick="get_raw_img()">Request raw image</button>
+    </div>
+    <div>
+        <img id="raw_img" width="500">
+    </div>
+    <div id="raw_stats">
+        <span>Measurements taken:</span>
+        <span id = "raw_img_steps"></span>
+        <span>Average time:</span>
+        <span id = "raw_img_time"></span>
+    </div>
 </section>
 <section>
     <H1>Compressed Image</H1>
-    <button onclick="get_compressed_img()">Request compressed image</button>
-    <img id="decompressed_img" width="500">
+    <div>
+        <button onclick="get_compressed_img()">Request compressed image</button>
+    </div>
+    <div>
+        <img id="decompressed_img" width="500">
+    </div>
+    <div id="decompressed_stats">
+        <span>Measurements taken:</span>
+        <span id = "decompressed_img_steps"></span>
+        <span>Average time:</span>
+        <span id = "decompressed_img_time"></span>
+    </div>
+</section>
+<section>
+    <H1>Raw Text</H1>
+    <div>
+        <button onclick="get_raw_text()">Request compressed text</button>
+    </div>
+    <div id="raw_text">
+        <details id="raw_text_details">
+        </details>
+        <span>Measurements taken:</span>
+        <span id = "raw_text_steps"></span>
+        <span>Average time:</span>
+        <span id = "raw_text_time"></span>
+    </div>
+</section>
+<section>
+    <H1>Compressed Text</H1>
+    <div>
+        <button onclick="get_compressed_text()">Request compressed text</button>
+    </div>
+    <div id="decompressed_text">
+        <details id="decompressed_text_details">
+        </details>
+        <span>Measurements taken:</span>
+        <span id = "decompressed_text_steps"></span>
+        <span>Average time:</span>
+        <span id = "decompressed_text_time"></span>
+    </div>
 </section>
 <script type="text/javascript" src="scripts/pako.min.js"></script>
 <script>
-    function get_compressed_img() {
-        fetch('/compressed_img', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.blob()
-        ).then(data => {
-            return data.arrayBuffer()
-        }).then(data => {
-            let compressed_data = new Uint8Array(data)
-            let decompressed_data = pako.inflate(compressed_data)
-            document.getElementById('decompressed_img').src = URL.createObjectURL(
-                new Blob([decompressed_data], { type: 'image/bmp' })
-            );
-        })
-        //     .then((response) => {
-        //     return response.body.getReader().read()
-        // }).then(({ done, value }) => {
-        //   let decompressed = pako.inflate(value);
-        //   console.log(value.length)
-        //   document.getElementById('decompressed_img').src = URL.createObjectURL(
-        //       new Blob([decompressed], { type: 'image/bmp' } /* (1) */)
-        //   );
-        // })
+    async function get_raw_img() {
+        let steps = 10;
+        let totalTime = 0;
+        for (let i = 0; i < steps; i++) {
+            let timeStart = Date.now();
+            await fetch('/raw_img', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.blob()
+            ).then(data => {
+                return data.arrayBuffer()
+            }).then(data => {
+                totalTime += Date.now() - timeStart;
+                if (i === 0) {
+                    document.getElementById('raw_img').src = URL.createObjectURL(
+                        new Blob([data], {type: 'image/bmp'})
+                    );
+                }
+            })
+        }
+        let avgTime = (totalTime / steps) / 1000
+        document.getElementById("raw_img_steps").innerText = steps.toString();
+        document.getElementById("raw_img_time").innerText = avgTime.toString();
+        document.getElementById("raw_stats").style.display = "block";
+    }
+    async function get_compressed_img() {
+        let steps = 10;
+        let totalTime = 0;
+        for (let i = 0; i < steps; i++) {
+            let timeStart = Date.now();
+            await fetch('/compressed_img', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.blob()
+            ).then(data => {
+                return data.arrayBuffer()
+            }).then(data => {
+                totalTime += Date.now() - timeStart;
+                if (i === 0) {
+                    let compressed_data = new Uint8Array(data)
+                    let decompressed_data = pako.inflate(compressed_data)
+                    document.getElementById('decompressed_img').src = URL.createObjectURL(
+                        new Blob([decompressed_data], {type: 'image/bmp'})
+                    );
+                }
+            })
+        }
+        let avgTime = (totalTime / steps) / 1000
+        document.getElementById("decompressed_img_steps").innerText = steps.toString();
+        document.getElementById("decompressed_img_time").innerText = avgTime.toString();
+        document.getElementById("decompressed_stats").style.display = "block";
+    }
+    async function get_compressed_text() {
+        let steps = 10;
+        let totalTime = 0;
+        for (let i = 0; i < steps; i++) {
+            let timeStart = Date.now();
+            await fetch('/compressed_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.blob()
+            ).then(data => {
+                return data.arrayBuffer()
+            }).then(data => {
+                totalTime += Date.now() - timeStart;
+                let compressed_data = new Uint8Array(data)
+                let decompressed_data = pako.inflate(compressed_data)
+                let text = new TextDecoder().decode(decompressed_data);
+                document.getElementById("decompressed_text_details").innerText = text
+            })
+        }
+        let avgTime = (totalTime / steps) / 1000
+        document.getElementById("decompressed_text_steps").innerText = steps.toString();
+        document.getElementById("decompressed_text_time").innerText = avgTime.toString();
+        document.getElementById("decompressed_text_stats").style.display = "block";
+    }
+    async function get_raw_text() {
+        let steps = 10;
+        let totalTime = 0;
+        for (let i = 0; i < steps; i++) {
+            let timeStart = Date.now();
+            await fetch('/raw_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.blob()
+            ).then(data => {
+                return data.arrayBuffer()
+            }).then(data => {
+                totalTime += Date.now() - timeStart;
+                if (i === 0) {
+                    let text = new TextDecoder().decode(data);
+                    document.getElementById("raw_text_details").innerText = text
+                }
+            })
+        }
+        let avgTime = (totalTime / steps) / 1000
+        document.getElementById("raw_text_steps").innerText = steps.toString();
+        document.getElementById("raw_text_time").innerText = avgTime.toString();
+        document.getElementById("raw_text").style.display = "block";
+    }
+    async function get_compressed_text() {
+        let steps = 10;
+        let totalTime = 0;
+        for (let i = 0; i < steps; i++) {
+            let timeStart = Date.now();
+            await fetch('/compressed_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.blob()
+            ).then(data => {
+                return data.arrayBuffer()
+            }).then(data => {
+                totalTime += Date.now() - timeStart;
+                if (i === 0) {
+                    let compressed_data = new Uint8Array(data)
+                    let decompressed_data = pako.inflate(compressed_data)
+                    let text = new TextDecoder().decode(decompressed_data);
+                    document.getElementById("decompressed_text_details").innerText = text
+                }
+            })
+        }
+        let avgTime = (totalTime / steps) / 1000
+        document.getElementById("decompressed_text_steps").innerText = steps.toString();
+        document.getElementById("decompressed_text_time").innerText = avgTime.toString();
+        document.getElementById("decompressed_text").style.display = "block";
     }
 </script>
 </body>

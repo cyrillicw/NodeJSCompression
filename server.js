@@ -8,20 +8,31 @@ app.use(express.urlencoded({'extended': false}));
 app.use(express.json());
 app.set('view engine', 'ejs')
 
-const img_filename = "raw.bmp"
+const imgFilename = "raw_img.bmp"
+const textFilename = "raw_text.txt"
 
 app.get('/', function(req, res) {
     res.render('view.ejs');
 });
 
-app.post('/compressed_img', function(req, res) {
-    res.contentType("application/octet-stream")
-    res.sendFile(__dirname + `/imgs/${img_filename}.pako`)
-});
-
 app.post('/raw_img', function(req, res) {
     res.contentType("application/octet-stream")
-    res.sendFile(__dirname + `/imgs/${img_filename}`)
+    res.sendFile(__dirname + `/assets/${imgFilename}`)
+});
+
+app.post('/compressed_img', function(req, res) {
+    res.contentType("application/octet-stream")
+    res.sendFile(__dirname + `/assets/${imgFilename}.pako`)
+});
+
+app.post('/raw_text', function(req, res) {
+    res.contentType("application/octet-stream")
+    res.sendFile(__dirname + `/assets/${textFilename}`)
+});
+
+app.post('/compressed_text', function(req, res) {
+    res.contentType("text")
+    res.sendFile(__dirname + `/assets/${textFilename}.pako`)
 });
 
 app.get('/scripts/pako.min.js', function(req, res) {
@@ -30,16 +41,21 @@ app.get('/scripts/pako.min.js', function(req, res) {
 });
 
 app.get('/styles/style.css', function(req, res) {
-    res.set('Content-Type', 'text/html');
-    res.sendFile(__dirname + '/scripts/pako.min.js');
+    res.set('Content-Type', 'text/css');
+    res.sendFile(__dirname + '/styles/style.css');
 });
 
-function compress_img() {
-    let raw_img = new Uint8Array(fs.readFileSync(`imgs/${img_filename}`, null))
+function compressFile(filename) {
+    let raw_img = new Uint8Array(fs.readFileSync(`assets/${filename}`, null))
     let output = pako.deflate(raw_img)
-    // console.log(raw_img.length)
-    fs.writeFile(`imgs/${img_filename}.pako`, Buffer.from(output), function (err) {});
+    fs.writeFile(`assets/${filename}.pako`, Buffer.from(output), function (err) {});
 }
-compress_img()
+
+function compress() {
+    compressFile(imgFilename)
+    compressFile(textFilename)
+}
+
+compress()
 
 app.listen(8080)

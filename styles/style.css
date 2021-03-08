@@ -1,3 +1,12 @@
-#decompressed_img {
-    
+#decompressed_stats {
+    display: none;
+}
+#raw_stats {
+    display: none;
+}
+#decompressed_text {
+    display: none;
+}
+#raw_text {
+    display: none;
 }
