@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+<section>
+    <H1>Raw Image</H1>
+    <button>Request raw image</button>
+</section>
+<section>
+    <H1>Compressed Image</H1>
+    <button onclick="get_compressed_img()">Request compressed image</button>
+    <img id="decompressed_img" width="500">
+</section>
+<script type="text/javascript" src="scripts/pako.min.js"></script>
+<script>
+    function get_compressed_img() {
+        fetch('/compressed_img', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.blob()
+        ).then(data => {
+            return data.arrayBuffer()
+        }).then(data => {
+            let compressed_data = new Uint8Array(data)
+            let decompressed_data = pako.inflate(compressed_data)
+            document.getElementById('decompressed_img').src = URL.createObjectURL(
+                new Blob([decompressed_data], { type: 'image/bmp' })
+            );
+        })
+        //     .then((response) => {
+        //     return response.body.getReader().read()
+        // }).then(({ done, value }) => {
+        //   let decompressed = pako.inflate(value);
+        //   console.log(value.length)
+        //   document.getElementById('decompressed_img').src = URL.createObjectURL(
+        //       new Blob([decompressed], { type: 'image/bmp' } /* (1) */)
+        //   );
+        // })
+    }
+</script>
+</body>
+</html>
